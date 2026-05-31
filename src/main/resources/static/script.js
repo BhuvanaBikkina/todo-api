@@ -1,63 +1,68 @@
-const API_URL = "/tasks";
+const taskInput = document.getElementById("taskInput");
+const taskList = document.getElementById("taskList");
 
-async function loadTasks() {
-    const response = await fetch(API_URL);
-    const tasks = await response.json();
+function addTask() {
 
-    const taskList = document.getElementById("taskList");
-    taskList.innerHTML = "";
+    const taskText = taskInput.value.trim();
 
-    tasks.forEach(task => {
-        const li = document.createElement("li");
+    if (taskText === "") {
+        alert("Please enter a task!");
+        return;
+    }
 
-        li.innerHTML = `
-            ${task.id} - ${task.title}
-            (${task.completed ? "Completed" : "Pending"})
-            <button onclick="completeTask(${task.id})">
-                Complete
+    const li = document.createElement("li");
+
+    li.innerHTML = `
+        <span class="task-text">${taskText}</span>
+
+        <div class="action-buttons">
+            <button class="complete-btn">
+                <i class="fa-solid fa-check"></i>
             </button>
-            <button onclick="deleteTask(${task.id})">
-                Delete
+
+            <button class="delete-btn">
+                <i class="fa-solid fa-trash"></i>
             </button>
-        `;
+        </div>
+    `;
 
-        taskList.appendChild(li);
+    taskList.appendChild(li);
+
+    taskInput.value = "";
+
+    updateStats();
+
+    const completeBtn = li.querySelector(".complete-btn");
+    const deleteBtn = li.querySelector(".delete-btn");
+
+    completeBtn.addEventListener("click", () => {
+        li.querySelector(".task-text").classList.toggle("completed");
+        updateStats();
+    });
+
+    deleteBtn.addEventListener("click", () => {
+        li.remove();
+        updateStats();
     });
 }
 
-async function addTask() {
-    const id = document.getElementById("taskId").value;
-    const title = document.getElementById("taskTitle").value;
+function updateStats() {
 
-    await fetch(API_URL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            id: parseInt(id),
-            title: title,
-            completed: false
-        })
-    });
+    const tasks = document.querySelectorAll("#taskList li");
 
-    loadTasks();
+    const completed = document.querySelectorAll(".completed");
+
+    document.getElementById("totalTasks").textContent = tasks.length;
+
+    document.getElementById("completedTasks").textContent =
+        completed.length;
+
+    document.getElementById("pendingTasks").textContent =
+        tasks.length - completed.length;
 }
 
-async function completeTask(id) {
-    await fetch(`${API_URL}/${id}/complete`, {
-        method: "PUT"
-    });
-
-    loadTasks();
-}
-
-async function deleteTask(id) {
-    await fetch(`${API_URL}/${id}`, {
-        method: "DELETE"
-    });
-
-    loadTasks();
-}
-
-loadTasks();
+taskInput.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+        addTask();
+    }
+});
